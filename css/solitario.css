@@ -49,7 +49,32 @@ div.tapete#inicial{
 	background-color: lightgrey;
 }
 
-
+div.tapete#sobrantes>img {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%,-50%);
+}
+div.tapete#receptor1>img {
+	position: absolute;
+	top: 14px;
+	left: 13px;
+}
+div.tapete#receptor2>img {
+	position: absolute;
+	top: 14px;
+	left: 13px;
+}
+div.tapete#receptor3>img {
+	position: absolute;
+	top: 14px;
+	left: 13px;
+}
+div.tapete#receptor4>img {
+	position: absolute;
+	top: 14px;
+	left: 13px;
+}
 /* Dimensiones para todos los tapetes salvo el inicial */
 div.tapete:not(#inicial){				
 	height: 125px;

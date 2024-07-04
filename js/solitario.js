@@ -27,6 +27,7 @@ let mazoReceptor1 = [];
 let mazoReceptor2 = [];
 let mazoReceptor3 = [];
 let mazoReceptor4 = [];
+let movimientos = 0;
 
 // Contadores de cartas
 let contInicial     = document.getElementById("contador_inicial");
@@ -52,6 +53,15 @@ let temporizador = null; // manejador del temporizador
 // El juego arranca ya al cargar la página: no se espera a reiniciar
 /*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/
 
+function resetContadores(){
+	contInicial.innerText = mazoInicial.length;
+	contSobrantes.innerText = mazoSobrantes.length;
+	contReceptor1.innerText = mazoReceptor1.length;
+	contReceptor2.innerText = mazoReceptor2.length;
+	contReceptor3.innerText = mazoReceptor3.length;
+	contReceptor4.innerText = mazoReceptor4.length;
+	contMovimientos.innerText = movimientos;
+}
 // Desarrollo del comienzo de juego
 function comenzarJuego() {
 	/* Crear baraja, es decir crear el mazoInicial. Este será un array cuyos 
@@ -69,20 +79,16 @@ function comenzarJuego() {
 	/*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/
 	palos.forEach(palo => {
 		numeros.forEach(numero => {
-			mazoInicial.push(pathImagen + numero+"-"+palo+formatoImagen);
+			mazoInicial.push(numero+"-"+palo);
 		});
 		
 	});
-	
-	console.log(mazoInicial);
 	barajar(mazoInicial);
-	console.log(mazoInicial);
-	document.getElementById("contador_inicial").textContent=mazoInicial.length;
 	cargarTapeteInicial(mazoInicial);
 
 	// Puesta a cero de contadores de mazos
 	/*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/
-	
+	resetContadores();
 	// Arrancar el conteo de tiempo
 	/*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/
 
@@ -158,7 +164,13 @@ function barajar(mazo) {
 } // barajar
 
 
-
+function al_mover(e){
+	var objeto = e.target.dataset;
+	e.dataTransfer.setData("text/plain/numero", objeto.numero);
+	e.dataTransfer.setData("text/plain/palo", objeto.palo);
+	e.dataTransfer.setData("text/plain/tapete", objeto.tapete);
+	console.log("dragstart: "+objeto.numero+"-"+objeto.palo);
+}
 /**
  	En el elemento HTML que representa el tapete inicial (variable tapeteInicial)
 	se deben añadir como hijos todos los elementos <img> del array mazo.
@@ -168,15 +180,47 @@ function barajar(mazo) {
 */
 function cargarTapeteInicial(mazo) {
 	/*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/
+	var cantidadCartasTapeteInicial = mazo.length;
+	var indice = 1;
 	mazo.forEach(element => {
-		var elem = document.createElement("img");
-		elem.setAttribute("src", element);
-		elem.setAttribute("height", "101");
-		elem.setAttribute("width", "75");
-		elem.setAttribute("alt", "Flower");
-		document.getElementById("inicial").appendChild(elem);	
-	});
+		var itemMazo = element.split("-");
+		var numero = itemMazo[0];
+		var palo = itemMazo[1];
 
+		var img_carta = document.createElement("img");
+		img_carta.setAttribute("src", pathImagen + element + formatoImagen);
+		img_carta.setAttribute("height", "101");
+		img_carta.setAttribute("width", "75");
+		img_carta.setAttribute("data-palo", palo);
+		img_carta.setAttribute("data-numero", numero);
+		img_carta.setAttribute("data-tapete", "inicial");
+		img_carta.style.top = "50 %";
+		img_carta.style.left = "50 %";
+// Con la siguiente traslación, se centra definitivamente en el tapete: se desplaza,
+// a la izquierda y hacia arriba (valores negativos) el 50 % de las dimensiones de
+// la carta.
+		img_carta.style.transform="translate(-50 %, -50 %)";
+		img_carta.setAttribute("id", numero+"-"+palo);
+		if(palo==='cir' || palo === 'hex'){
+			img_carta.setAttribute("color", "gris");
+		}
+		else {
+			img_carta.setAttribute("color", "naranja");
+		}
+
+		if(cantidadCartasTapeteInicial === indice){
+			img_carta.setAttribute("draggable", true);
+		}
+		else {
+			img_carta.setAttribute("draggable", false);
+		}
+
+		tapeteInicial.appendChild(img_carta);
+		img_carta.ondragstart = al_mover;
+		img_carta.ondrag = function(e) { };
+		img_carta.ondragend = function() { };
+	indice++;
+	});
 } // cargarTapeteInicial
 
 
@@ -185,7 +229,8 @@ function cargarTapeteInicial(mazo) {
    	del elemento que actúa de contador
 */
 function incContador(contador){
-	/*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/	
+	/*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/
+
 } // incContador
 
 /**
@@ -201,12 +246,178 @@ function decContador(contador){
 */
 function setContador(contador, valor) {
 	/*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/
+	contador.innerText = valor;
 } // setContador
 
 
+function verificarFinJuego(){
+	if(mazoInicial.length == 0 && mazoSobrantes == 0){
+		$('#myModal').modal('show');
+	}
+}
+function regresarCartasMazoSobranteMazoInicial()
+{
+	if(mazoInicial.length===0 && mazoSobrantes.length>0){
+		mazoSobrantes.forEach(elementoSobrante=>{
+			var elemento = document.getElementById(elementoSobrante);
+			elemento.parentNode.removeChild(elemento);
+		});
+		mazoInicial = mazoSobrantes;
+		barajar(mazoInicial);
+		cargarTapeteInicial(mazoInicial);
+		mazoSobrantes = [];
+		contInicial.innerText = mazoInicial.length;
+		contSobrantes.innerText = mazoSobrantes.length;
+	}
+}
+function soltar(event,mazoParametro,tapeteParametro,aplicaRegla){
+	event.preventDefault();
+
+	const palo = event.dataTransfer.getData("text/plain/palo");
+	const numero = event.dataTransfer.getData("text/plain/numero");
+	const tapete = event.dataTransfer.getData("text/plain/tapete");
+	var color = (palo ==='cir' || palo === 'hex')?'gris':'naranja';
+	var carta = numero+"-"+palo;
+	var insertar = false;
+	var existe = mazoParametro.includes(carta);
+	if(!existe){
+		if(aplicaRegla===true)
+		{
+			if(mazoParametro.length===0)
+			{
+				if(numero==numeros[numeros.length-1]){
+					insertar = true;
+				}
+			}
+			else
+			{
+				var ultimoElementoReceptor1 = mazoParametro[mazoParametro.length-1];
+				var auxElementoReceptor1 = ultimoElementoReceptor1.split("-");
+				var numeroUltimoElementoReceptor = auxElementoReceptor1[0];
+				var paloUltimoElementoReceptor = auxElementoReceptor1[1];
+				var colorPaloUltimoElementoReceptor = (paloUltimoElementoReceptor ==='cir' || paloUltimoElementoReceptor === 'hex')?'gris':'naranja';
+				if(numero == numeroUltimoElementoReceptor-1) {
+					if(colorPaloUltimoElementoReceptor != color){
+						insertar = true;
+					}
+
+				}
+			}
+			if(insertar===true)
+			{
+				mazoParametro.push(carta);
+				if(tapete==='inicial')
+				{
+					mazoInicial.pop();
+				}
+				else {
+					mazoSobrantes.pop();
+				}
+
+
+				var ultimoItemMazoInicial = mazoInicial[mazoInicial.length-1];
+				var domUltimoItemMazoInicial = document.getElementById(ultimoItemMazoInicial)
+				if(domUltimoItemMazoInicial!=null){
+					domUltimoItemMazoInicial.setAttribute("draggable", true);
+				}
+
+
+				//var ultimaCartaMazoInicial =
+
+				var img_carta = document.createElement("img");
+				img_carta.setAttribute("src", pathImagen + carta + formatoImagen);
+				img_carta.setAttribute("height", "101");
+				img_carta.setAttribute("width", "75");
+				img_carta.setAttribute("data-palo", palo);
+				img_carta.setAttribute("data-numero", numero);
+				img_carta.setAttribute("id", numero+"-"+palo);
+				tapeteParametro.appendChild(img_carta);
+
+				var elemento = document.getElementById(numero+"-"+palo);
+				elemento.parentNode.removeChild(elemento);
+				movimientos++;
+				//regresarCartasMazoSobranteMazoInicial();
+			}
+
+		}
+		else {
+			mazoParametro.push(carta);
+			mazoInicial.pop();
+			var ultimoItemMazoInicial = mazoInicial[mazoInicial.length-1];
+			var domUltimoItemMazoInicial = document.getElementById(ultimoItemMazoInicial)
+			if(domUltimoItemMazoInicial!=null){
+				domUltimoItemMazoInicial.setAttribute("draggable", true);
+			}
+			var img_carta = document.createElement("img");
+			img_carta.setAttribute("src",pathImagen + carta + formatoImagen);
+			img_carta.setAttribute("height", "101");
+			img_carta.setAttribute("width", "75");
+			img_carta.setAttribute("data-palo", palo);
+			img_carta.setAttribute("data-numero", numero);
+
+			img_carta.setAttribute("id", numero+"-"+palo);
+			if(palo==='cir' || palo === 'hex'){
+				img_carta.setAttribute("color", "gris");
+			}
+			else {
+				img_carta.setAttribute("color", "naranja");
+			}
+			tapeteParametro.appendChild(img_carta);
+			img_carta.ondragstart = al_mover;
+			img_carta.ondrag = function(e) { };
+			img_carta.ondragend = function() { };
+
+			var elemento = document.getElementById(numero+"-"+palo);
+			elemento.parentNode.removeChild(elemento);
+			movimientos++;
+
+		}
+	}
+	resetContadores();
+	regresarCartasMazoSobranteMazoInicial();
+	verificarFinJuego();
+
+}
+function reiniciar(){
+	document.querySelectorAll(".tapete img")
+		.forEach(img => img.remove());
+	mazoInicial = [];
+	mazoSobrantes = [];
+	mazoReceptor1 = [];
+	mazoReceptor2 = [];
+	mazoReceptor3 = [];
+	mazoReceptor4 = [];
+	movimientos = 0;
+	comenzarJuego();
+	clearInterval(temporizador)
+	arrancarTiempo();
+}
 window.onload = function() {
- 
   comenzarJuego();
-  
-  //cargarTapeteInicial("");
+	tapeteSobrantes.ondragenter = function(e) { e.preventDefault(); };
+	tapeteSobrantes.ondragover = function(e) { e.preventDefault(); };
+	tapeteSobrantes.ondragleave = function(e) { e.preventDefault(); };
+	tapeteSobrantes.ondrop = (event)=>soltar(event,mazoSobrantes,tapeteSobrantes,false);
+
+	tapeteReceptor1.ondragenter = function(e) { e.preventDefault(); };
+	tapeteReceptor1.ondragover = function(e) { e.preventDefault(); };
+	tapeteReceptor1.ondragleave = function(e) { e.preventDefault(); };
+	tapeteReceptor1.ondrop = (event)=>soltar(event,mazoReceptor1,tapeteReceptor1,true);
+
+	tapeteReceptor2.ondragenter = function(e) { e.preventDefault(); };
+	tapeteReceptor2.ondragover = function(e) { e.preventDefault(); };
+	tapeteReceptor2.ondragleave = function(e) { e.preventDefault(); };
+	tapeteReceptor2.ondrop = (event)=>soltar(event,mazoReceptor2,tapeteReceptor2,true);
+
+	tapeteReceptor3.ondragenter = function(e) { e.preventDefault(); };
+	tapeteReceptor3.ondragover = function(e) { e.preventDefault(); };
+	tapeteReceptor3.ondragleave = function(e) { e.preventDefault(); };
+	tapeteReceptor3.ondrop = (event)=>soltar(event,mazoReceptor3,tapeteReceptor3,true);
+
+	tapeteReceptor4.ondragenter = function(e) { e.preventDefault(); };
+	tapeteReceptor4.ondragover = function(e) { e.preventDefault(); };
+	tapeteReceptor4.ondragleave = function(e) { e.preventDefault(); };
+	tapeteReceptor4.ondrop = (event)=>soltar(event,mazoReceptor4,tapeteReceptor4,true);
+
+	arrancarTiempo();
 }

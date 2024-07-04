@@ -11,17 +11,23 @@
 		Invocar a los ficheros de estilos y al JavaScript donde proceda
         -->     
 		<link rel="stylesheet" href="css/solitario.css">
-		<script src="js/solitario.js"></script>
+
 	</head>
 
-    <body>
+    <body class="container-fluid">
 		<div class="central">
 			<!-- Título principal -->
 
 			<!--/*** !!!!!!!!!!!!!!!!!!! CODIGO !!!!!!!!!!!!!!!!!!!! **/
 			Rellenar h1 e insertar el logo donde proceda
         	-->
-			<h1 id="titulo"></h1>
+			<div class="row">
+				<div class="col-sm-4"></div>
+				<div class="col-sm-4"><h1 id="titulo">Juego del solitario</h1></div>
+				<div class="col-sm-4"><img src="imagenes/logoVIU.png" width="140" height="70" alt=""></div>
+			</div>
+
+
 			
 			<!-- Siguiente línea donde se indicará el tiempo transcurrido y la cantidad
 				de movimientos que se han hecho hasta el momento. Estos números se 
@@ -36,7 +42,24 @@
 				y en la parte inferior los cuatro restantes. Los contadores de los
 				mazos de cartas de cada tapete están indicados oportunamente dentro
 				de elementos span -->
-			
+
+			<!-- Modal -->
+			<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title" id="myModalLabel">Aviso</h4>
+						</div>
+						<div class="modal-body">
+							¡Juego Finalizado!
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+						</div>
+					</div>
+				</div>
+			</div>
 				
 
 			<div id="mesa">
@@ -44,16 +67,23 @@
 					<div id="inicial" class="tapete images-wrapper"><span id="contador_inicial" class="contador"></span>
 					
 					</div><!--
-					--><div id="sobrantes" class="tapete"><span id="contador_sobrantes" class="contador"></span></div>
+					--><div id="sobrantes" class="tapete sobrante">
+							<span id="contador_sobrantes" class="contador"></span>
+						</div>
 				</div>
 				<div id="receptor1" class="tapete receptor"><span id="contador_receptor1" class="contador"></span></div><!--
 				--><div id="receptor2" class="tapete receptor"><span id="contador_receptor2" class="contador"></span></div><!--
 				--><div id="receptor3" class="tapete receptor"><span id="contador_receptor3" class="contador"></span></div><!--
 				--><div id="receptor4" class="tapete receptor"><span id="contador_receptor4" class="contador"></span></div>			
-			</div>	
+			</div>
+			<div class="row">
+				<div class="col-sm-4 col-sm-offset-4 text-center">
+					<!-- Botón de reset que reinicia todo: partida, contadores de tiempo, de movimientos, ... -->
+					<button id="reset" class="btn btn-danger" onclick="reiniciar()">Reiniciar</button>
+				</div>
+			</div>
 
-			<!-- Botón de reset que reinicia todo: partida, contadores de tiempo, de movimientos, ... -->
-			<button id="reset" class="btn btn-danger">Reiniciar</button>
 		</div> <!-- class="central" -->
     </body>
+	<script src="js/solitario.js"></script>
 </html>
